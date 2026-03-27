@@ -1,72 +1,71 @@
-package com.bridgelabz.employeepayrollapp.service;
+package com.bridgelabz.EmployeePayrollApp.service;
 
-import com.bridgelabz.employeepayrollapp.dto.EmployeePayrollDTO;
-import com.bridgelabz.employeepayrollapp.model.EmployeePayrollData;
+import com.bridgelabz.EmployeePayrollApp.dto.EmployeePayrollDTO;
+import com.bridgelabz.EmployeePayrollApp.model.EmployeePayrollData;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
+@Slf4j
 @Service
-public class EmployeePayrollService
-        implements IEmployeePayrollService {
+public class EmployeePayrollService implements IEmployeePayrollService {
 
-    // In-memory list to store employees
-    private List<EmployeePayrollData> employeePayrollList
-            = new ArrayList<>();
+    private final List<EmployeePayrollData> employeeList = new ArrayList<>();
+    private int counter = 1;
 
-    // Auto increment ID counter
-    private AtomicLong idCounter = new AtomicLong(1);
-
-    // GET all employees
+    // GET ALL
     @Override
     public List<EmployeePayrollData> getEmployeePayrollData() {
-        return employeePayrollList;
+        log.info("Fetching all employees from service layer");
+        return employeeList;
     }
 
-    // GET employee by ID
+    // GET BY ID
     @Override
-    public EmployeePayrollData getEmployeePayrollDataById(
-            long empId) {
-        return employeePayrollList.stream()
-                .filter(emp -> emp.employeeId == empId)
+    public EmployeePayrollData getEmployeePayrollDataById(int empId) {
+        log.info("Fetching employee with ID: {}", empId);
+        return employeeList.stream()
+                .filter(emp -> emp.getId() == empId)
                 .findFirst()
                 .orElse(null);
     }
 
-    // CREATE employee
+    // CREATE
     @Override
-    public EmployeePayrollData createEmployeePayrollData(
-            EmployeePayrollDTO employeePayrollDTO) {
-        EmployeePayrollData empData = new EmployeePayrollData(
-                idCounter.getAndIncrement(),
-                employeePayrollDTO.getName(),
-                employeePayrollDTO.getSalary()
-        );
-        employeePayrollList.add(empData);
-        return empData;
+    public EmployeePayrollData createEmployeePayrollData(EmployeePayrollDTO dto) {
+        log.info("Creating employee in service layer: {}", dto);
+
+        EmployeePayrollData emp = new EmployeePayrollData();
+        emp.setId(counter++);
+        emp.setName(dto.getName());
+        emp.setSalary(dto.getSalary());
+
+        employeeList.add(emp);
+        log.info("Employee added: {}", emp);
+
+        return emp;
     }
 
-    // UPDATE employee
+    // UPDATE
     @Override
-    public EmployeePayrollData updateEmployeePayrollData(
-            long empId, EmployeePayrollDTO employeePayrollDTO) {
-        EmployeePayrollData empData =
-                getEmployeePayrollDataById(empId);
-        if (empData != null) {
-            empData.name = employeePayrollDTO.getName();
-            empData.salary = employeePayrollDTO.getSalary();
+    public EmployeePayrollData updateEmployeePayrollData(int empId, EmployeePayrollDTO dto) {
+        log.info("Updating employee with ID: {}", empId);
+
+        EmployeePayrollData emp = getEmployeePayrollDataById(empId);
+        if (emp != null) {
+            emp.setName(dto.getName());
+            emp.setSalary(dto.getSalary());
+            log.info("Employee updated: {}", emp);
         }
-        return empData;
+        return emp;
     }
 
-    // DELETE employee
+    // DELETE
     @Override
-    public void deleteEmployeePayrollData(long empId) {
-        EmployeePayrollData empData =
-                getEmployeePayrollDataById(empId);
-        if (empData != null) {
-            employeePayrollList.remove(empData);
-        }
+    public void deleteEmployeePayrollData(int empId) {
+        log.warn("Deleting employee with ID: {}", empId);
+        employeeList.removeIf(emp -> emp.getId() == empId);
     }
 }
